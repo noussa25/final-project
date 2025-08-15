@@ -1,0 +1,309 @@
+
+        // Initialisation de l'application Quiz
+        const quizScreen = document.getElementById('quizScreen');
+// Configuration du quiz - Questions et réponses
+        const quizData = [
+            {
+                question: "Quelle est la capitale de la France ?",
+                answers: ["Londres", "Berlin", "Paris", "Madrid"],
+                correct: 2
+            },
+            {
+                question: "Combien de continents y a-t-il sur Terre ?",
+                answers: ["5", "6", "7", "8"],
+                correct: 2
+            },
+            {
+                question: "Qui a peint la Joconde ?",
+                answers: ["Vincent van Gogh", "Leonardo da Vinci", "Pablo Picasso", "Claude Monet"],
+                correct: 1
+            },
+            {
+                question: "Quel est le plus grand océan du monde ?",
+                answers: ["Océan Atlantique", "Océan Indien", "Océan Arctique", "Océan Pacifique"],
+                correct: 3
+            },
+            {
+                question: "En quelle année a eu lieu la révolution française ?",
+                answers: ["1789", "1776", "1804", "1799"],
+                correct: 0
+            },
+            {
+                question: "Quelle est la planète la plus proche du Soleil ?",
+                answers: ["Vénus", "Mercure", "Mars", "Terre"],
+                correct: 1
+            },
+            {
+                question: "Combien de côtés a un hexagone ?",
+                answers: ["5", "6", "7", "8"],
+                correct: 1
+            },
+            {
+                question: "Qui a écrit 'Les Misérables' ?",
+                answers: ["Victor Hugo", "Alexandre Dumas", "Émile Zola", "Gustave Flaubert"],
+                correct: 0
+            },
+            {
+                question: "Quelle est la formule chimique de l'eau ?",
+                answers: ["CO2", "H2O", "O2", "NaCl"],
+                correct: 1
+            },
+            {
+                question: "Dans quel pays se trouve Machu Picchu ?",
+                answers: ["Brésil", "Argentine", "Pérou", "Chili"],
+                correct: 2
+            }
+        ];
+
+        // Variables globales pour le suivi du quiz
+        let currentQuestion = 0;
+        let score = 0;
+        let selectedAnswer = null;
+        let userAnswers = [];
+        let quizStarted = false;
+
+        // Fonction pour aller à l'écran de démarrage depuis l'accueil
+        function goToStart() {
+            document.getElementById('homeScreen').classList.add('hidden');
+            document.getElementById('startScreen').classList.remove('hidden');
+        }
+
+        // Fonction pour retourner à l'accueil
+        function goToHome() {
+            // Cacher tous les écrans
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('questionScreen').classList.add('hidden');
+            document.getElementById('resultsScreen').classList.add('hidden');
+            document.getElementById('reviewScreen').classList.add('hidden');
+            
+            // Afficher l'écran d'accueil
+            document.getElementById('homeScreen').classList.remove('hidden');
+            
+            // Réinitialiser les variables
+            currentQuestion = 0;
+            score = 0;
+            selectedAnswer = null;
+            userAnswers = [];
+            document.getElementById('currentScore').textContent = '0';
+            document.getElementById('progressBar').style.width = '0%';
+        }
+
+        // Fonction pour démarrer le quiz
+        function startQuiz() {
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('questionScreen').classList.remove('hidden');
+            currentQuestion = 0;
+            score = 0;
+            userAnswers = [];
+            quizStarted = true;
+            showQuestion();
+            updateProgress();
+        }
+
+        // Fonction pour afficher la question actuelle
+        function showQuestion() {
+            const question = quizData[currentQuestion];
+            
+            // Animation de disparition puis apparition
+            const container = document.querySelector('.question-container');
+            container.style.opacity = '0';
+            container.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                document.getElementById('questionNumber').textContent = `Question ${currentQuestion + 1} sur ${quizData.length}`;
+                document.getElementById('questionText').textContent = question.question;
+                
+                const answersContainer = document.getElementById('answersContainer');
+                answersContainer.innerHTML = '';
+                
+                // Créer les boutons de réponse
+                question.answers.forEach((answer, index) => {
+                    const answerDiv = document.createElement('div');
+                    answerDiv.classList.add('answer');
+                    answerDiv.textContent = answer;
+                    answerDiv.onclick = () => selectAnswer(index);
+                    answersContainer.appendChild(answerDiv);
+                });
+                
+                // Réinitialiser les boutons et feedback
+                document.getElementById('submitBtn').style.display = 'none';
+                document.getElementById('nextBtn').style.display = 'none';
+                document.getElementById('feedback').innerHTML = '';
+                document.getElementById('feedback').className = 'feedback';
+                selectedAnswer = null;
+                
+                // Animation d'apparition
+                container.style.opacity = '1';
+                container.style.transform = 'translateY(0)';
+            }, 200);
+        }
+
+        // Fonction pour sélectionner une réponse
+        function selectAnswer(index) {
+            if (selectedAnswer !== null) return; // Empêcher la re-sélection après validation
+            
+            selectedAnswer = index;
+            
+            // Retirer la classe selected de toutes les réponses
+            document.querySelectorAll('.answer').forEach(answer => {
+                answer.classList.remove('selected');
+            });
+            
+            // Ajouter la classe selected à la réponse choisie
+            document.querySelectorAll('.answer')[index].classList.add('selected');
+            
+            // Montrer le bouton de validation
+            document.getElementById('submitBtn').style.display = 'inline-block';
+        }
+
+        // Fonction pour valider la réponse
+        function submitAnswer() {
+            if (selectedAnswer === null) return;
+            
+            const question = quizData[currentQuestion];
+            const isCorrect = selectedAnswer === question.correct;
+            
+            // Enregistrer la réponse de l'utilisateur
+            userAnswers.push({
+                question: question.question,
+                userAnswer: selectedAnswer,
+                correctAnswer: question.correct,
+                answers: question.answers,
+                isCorrect: isCorrect
+            });
+            
+            // Mettre à jour le score
+            if (isCorrect) {
+                score++;
+                document.getElementById('currentScore').textContent = score;
+            }
+            
+            // Afficher le feedback visuel
+            document.querySelectorAll('.answer').forEach((answer, index) => {
+                if (index === question.correct) {
+                    answer.classList.add('correct');
+                } else if (index === selectedAnswer && !isCorrect) {
+                    answer.classList.add('incorrect');
+                }
+            });
+            
+            // Afficher le feedback textuel
+            const feedbackDiv = document.getElementById('feedback');
+            if (isCorrect) {
+                feedbackDiv.innerHTML = '✅ Bonne réponse !';
+                feedbackDiv.classList.add('correct');
+            } else {
+                feedbackDiv.innerHTML = `❌ Mauvaise réponse. La bonne réponse était : ${question.answers[question.correct]}`;
+                feedbackDiv.classList.add('incorrect');
+            }
+            
+            // Cacher le bouton de validation et montrer le bouton suivant
+            document.getElementById('submitBtn').style.display = 'none';
+            if (currentQuestion < quizData.length - 1) {
+                document.getElementById('nextBtn').style.display = 'inline-block';
+            } else {
+                setTimeout(() => {
+                    showResults();
+                }, 3000); // Augmentation à 3 secondes
+            }
+        }
+
+        // Fonction pour passer à la question suivante
+        function nextQuestion() {
+            currentQuestion++;
+            updateProgress();
+            if (currentQuestion < quizData.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        // Fonction pour mettre à jour la barre de progression
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / quizData.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        // Fonction pour afficher les résultats finaux
+        function showResults() {
+            document.getElementById('questionScreen').classList.add('hidden');
+            document.getElementById('resultsScreen').classList.remove('hidden');
+            
+            const percentage = Math.round((score / quizData.length) * 100);
+            document.getElementById('finalScore').textContent = `${score}/${quizData.length} (${percentage}%)`;
+            
+            // Déterminer la note et l'encouragement
+            const gradeDiv = document.getElementById('gradeText');
+            const encouragementDiv = document.getElementById('encouragement');
+            
+            if (percentage >= 80) {
+                gradeDiv.textContent = 'Excellent !';
+                gradeDiv.className = 'grade excellent';
+                encouragementDiv.textContent = 'Bravo ! Tu maîtrises vraiment bien ces sujets !';
+            } else if (percentage >= 60) {
+                gradeDiv.textContent = 'Bien joué !';
+                gradeDiv.className = 'grade good';
+                encouragementDiv.textContent = 'C\'est un bon résultat ! Quelques révisions et tu seras au top !';
+            } else {
+                gradeDiv.textContent = 'Peut mieux faire';
+                gradeDiv.className = 'grade average';
+                encouragementDiv.textContent = 'Ne te décourage pas ! La pratique mène à la perfection !';
+            }
+        }
+
+        // Fonction pour afficher la révision des réponses
+        function showReview() {
+            document.getElementById('resultsScreen').classList.add('hidden');
+            document.getElementById('reviewScreen').classList.remove('hidden');
+            
+            const reviewContent = document.getElementById('reviewContent');
+            reviewContent.innerHTML = '';
+            
+            userAnswers.forEach((item, index) => {
+                const reviewItem = document.createElement('div');
+                reviewItem.className = 'review-item';
+                
+                reviewItem.innerHTML = `
+                    <div class="review-question">${index + 1}. ${item.question}</div>
+                    <div class="review-answer user">Ta réponse: ${item.answers[item.userAnswer]} ${item.isCorrect ? '✅' : '❌'}</div>
+                    ${!item.isCorrect ? `<div class="review-answer correct">Bonne réponse: ${item.answers[item.correctAnswer]} ✅</div>` : ''}
+                `;
+                
+                reviewContent.appendChild(reviewItem);
+            });
+        }
+
+        // Fonction pour retourner aux résultats
+        function backToResults() {
+            document.getElementById('reviewScreen').classList.add('hidden');
+            document.getElementById('resultsScreen').classList.remove('hidden');
+        }
+
+        // Fonction pour recommencer le quiz
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            selectedAnswer = null;
+            userAnswers = [];
+            
+            // Cacher tous les écrans et montrer l'écran de démarrage
+            document.getElementById('resultsScreen').classList.add('hidden');
+            document.getElementById('reviewScreen').classList.add('hidden');
+            document.getElementById('questionScreen').classList.add('hidden');
+            document.getElementById('homeScreen').classList.add('hidden');
+            document.getElementById('startScreen').classList.remove('hidden');
+            
+            // Réinitialiser l'affichage
+            document.getElementById('currentScore').textContent = '0';
+            document.getElementById('progressBar').style.width = '0%';
+        }
+
+        // Initialisation au chargement de la page
+        window.onload = function() {
+            console.log('Quiz App Pro initialisée avec succès ! 🚀');
+            console.log('Nouvelles fonctionnalités: Page d\'accueil + couleurs vibrantes + timings améliorés');
+        };
+        // Événements pour les boutons
+        document.getElementById('startQuizBtn').addEventListener('click', startQuiz);
+        document.getElementById('submitBtn').addEventListener('click', submitAnswer);
